@@ -51,6 +51,12 @@ button{ font-family: inherit; }
   display: flex;
   cursor: pointer;
 }
+.icon-btn-spacer{
+  width: 38px;
+}
+.back-btn{
+  color: var(--accent);
+}
 
 main{
   padding: 0 20px;
@@ -269,6 +275,9 @@ main{
   align-items: flex-end;
   z-index: 50;
 }
+.sheet-overlay[hidden]{
+  display: none;
+}
 .sheet{
   background: var(--bg);
   width: 100%;
@@ -376,9 +385,13 @@ main{
   cursor: pointer;
 }
 
-/* Menu sheet */
-.sheet-menu{
-  padding-bottom: calc(24px + var(--safe-bottom));
+/* Page Réglages */
+#settingsView main{
+  padding-top: 20px;
+}
+.settings-list{
+  display: flex;
+  flex-direction: column;
 }
 .menu-item{
   display: block;
@@ -395,13 +408,6 @@ main{
 }
 .menu-item-danger{
   color: var(--danger);
-}
-.menu-item-cancel{
-  text-align: center;
-  color: var(--text-secondary);
-  border: none;
-  background: none;
-  margin-top: 14px;
 }
 
 @media (min-width: 700px){

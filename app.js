@@ -322,7 +322,6 @@ fType.querySelectorAll(".segment").forEach(btn => {
 });
 
 function openForm(id){
-  menuOverlay.hidden = true;
   editingId = id;
   populateCategorySelect();
   goalForm.reset();
@@ -405,11 +404,22 @@ formDelete.addEventListener("click", () => {
 });
 formOverlay.addEventListener("click", (e) => { if(e.target === formOverlay) closeForm(); });
 
-/* ---------- Menu (export / import / reset) ---------- */
-const menuOverlay = document.getElementById("menuOverlay");
-document.getElementById("menuBtn").addEventListener("click", () => { closeForm(); menuOverlay.hidden = false; });
-document.getElementById("menuCancel").addEventListener("click", () => { menuOverlay.hidden = true; });
-menuOverlay.addEventListener("click", (e) => { if(e.target === menuOverlay) menuOverlay.hidden = true; });
+/* ---------- Réglages (page dédiée, pas un popup) ---------- */
+const mainView = document.getElementById("mainView");
+const settingsView = document.getElementById("settingsView");
+
+function openSettings(){
+  closeForm();
+  mainView.hidden = true;
+  settingsView.hidden = false;
+}
+function closeSettings(){
+  settingsView.hidden = true;
+  mainView.hidden = false;
+}
+
+document.getElementById("menuBtn").addEventListener("click", openSettings);
+document.getElementById("settingsBack").addEventListener("click", closeSettings);
 
 document.getElementById("exportBtn").addEventListener("click", () => {
   const blob = new Blob([JSON.stringify(goals, null, 2)], { type: "application/json" });
@@ -419,7 +429,6 @@ document.getElementById("exportBtn").addEventListener("click", () => {
   a.download = "objectifs2026.json";
   a.click();
   URL.revokeObjectURL(url);
-  menuOverlay.hidden = true;
 });
 
 document.getElementById("importInput").addEventListener("change", (e) => {
@@ -433,7 +442,7 @@ document.getElementById("importInput").addEventListener("change", (e) => {
       goals = parsed;
       saveData();
       renderAll();
-      menuOverlay.hidden = true;
+      closeSettings();
     }catch(err){
       alert("Fichier invalide. Impossible d'importer ces données.");
     }
@@ -447,7 +456,7 @@ document.getElementById("resetBtn").addEventListener("click", () => {
     goals = JSON.parse(JSON.stringify(SEED_GOALS));
     saveData();
     renderAll();
-    menuOverlay.hidden = true;
+    closeSettings();
   }
 });
 

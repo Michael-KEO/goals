@@ -14,40 +14,61 @@
 </head>
 <body>
 
-  <header class="topbar">
-    <h1>Objectifs 2026</h1>
-    <button id="menuBtn" class="icon-btn" aria-label="Options">
-      <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></svg>
-    </button>
-  </header>
+  <div id="mainView">
+    <header class="topbar">
+      <h1>Objectifs 2026</h1>
+      <button id="menuBtn" class="icon-btn" aria-label="Réglages">
+        <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></svg>
+      </button>
+    </header>
 
-  <main>
-    <section class="summary">
-      <div class="summary-stats">
-        <div class="stat"><span class="stat-value" id="statTotal">0</span><span class="stat-label">objectifs</span></div>
-        <div class="stat"><span class="stat-value" id="statDone">0</span><span class="stat-label">terminés</span></div>
-        <div class="stat"><span class="stat-value" id="statOngoing">0</span><span class="stat-label">en cours</span></div>
-      </div>
-      <div class="global-progress">
-        <div class="global-progress-track">
-          <div class="global-progress-fill" id="globalProgressFill"></div>
+    <main>
+      <section class="summary">
+        <div class="summary-stats">
+          <div class="stat"><span class="stat-value" id="statTotal">0</span><span class="stat-label">objectifs</span></div>
+          <div class="stat"><span class="stat-value" id="statDone">0</span><span class="stat-label">terminés</span></div>
+          <div class="stat"><span class="stat-value" id="statOngoing">0</span><span class="stat-label">en cours</span></div>
         </div>
-        <span class="global-progress-label" id="globalProgressLabel">0 %</span>
+        <div class="global-progress">
+          <div class="global-progress-track">
+            <div class="global-progress-fill" id="globalProgressFill"></div>
+          </div>
+          <span class="global-progress-label" id="globalProgressLabel">0 %</span>
+        </div>
+      </section>
+
+      <nav class="filters" id="filters" aria-label="Filtrer par catégorie">
+        <button class="filter-chip active" data-category="all">Tout</button>
+      </nav>
+
+      <section class="goal-list" id="goalList"></section>
+
+      <p class="empty-state" id="emptyState" hidden>Aucun objectif ici. Ajoute-en un avec le bouton +.</p>
+    </main>
+
+    <button id="addBtn" class="fab" aria-label="Ajouter un objectif">
+      <svg viewBox="0 0 24 24" width="26" height="26"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+
+  <!-- Page Réglages (pas un popup, une vraie page) -->
+  <div id="settingsView" hidden>
+    <header class="topbar">
+      <button id="settingsBack" class="icon-btn back-btn" aria-label="Retour">
+        <svg viewBox="0 0 24 24" width="22" height="22"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <h1>Réglages</h1>
+      <span class="icon-btn-spacer"></span>
+    </header>
+    <main>
+      <div class="settings-list">
+        <button class="menu-item" id="exportBtn">Exporter les données (JSON)</button>
+        <label class="menu-item" for="importInput">Importer des données (JSON)</label>
+        <input type="file" id="importInput" accept="application/json" hidden>
+        <button class="menu-item menu-item-danger" id="resetBtn">Réinitialiser les données</button>
       </div>
-    </section>
-
-    <nav class="filters" id="filters" aria-label="Filtrer par catégorie">
-      <button class="filter-chip active" data-category="all">Tout</button>
-    </nav>
-
-    <section class="goal-list" id="goalList"></section>
-
-    <p class="empty-state" id="emptyState" hidden>Aucun objectif ici. Ajoute-en un avec le bouton +.</p>
-  </main>
-
-  <button id="addBtn" class="fab" aria-label="Ajouter un objectif">
-    <svg viewBox="0 0 24 24" width="26" height="26"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
-  </button>
+    </main>
+  </div>
 
   <!-- Formulaire d'ajout / édition -->
   <div class="sheet-overlay" id="formOverlay" hidden>
@@ -104,18 +125,6 @@
 
         <button type="button" id="formDelete" class="delete-btn" hidden>Supprimer l'objectif</button>
       </form>
-    </div>
-  </div>
-
-  <!-- Menu options (export / import / reset) -->
-  <div class="sheet-overlay" id="menuOverlay" hidden>
-    <div class="sheet sheet-menu" role="dialog" aria-modal="true">
-      <div class="sheet-handle"></div>
-      <button class="menu-item" id="exportBtn">Exporter les données (JSON)</button>
-      <label class="menu-item" for="importInput">Importer des données (JSON)</label>
-      <input type="file" id="importInput" accept="application/json" hidden>
-      <button class="menu-item menu-item-danger" id="resetBtn">Réinitialiser les données</button>
-      <button class="menu-item menu-item-cancel" id="menuCancel">Fermer</button>
     </div>
   </div>
 
