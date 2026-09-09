@@ -322,6 +322,7 @@ fType.querySelectorAll(".segment").forEach(btn => {
 });
 
 function openForm(id){
+  menuOverlay.hidden = true;
   editingId = id;
   populateCategorySelect();
   goalForm.reset();
@@ -406,7 +407,7 @@ formOverlay.addEventListener("click", (e) => { if(e.target === formOverlay) clos
 
 /* ---------- Menu (export / import / reset) ---------- */
 const menuOverlay = document.getElementById("menuOverlay");
-document.getElementById("menuBtn").addEventListener("click", () => { menuOverlay.hidden = false; });
+document.getElementById("menuBtn").addEventListener("click", () => { closeForm(); menuOverlay.hidden = false; });
 document.getElementById("menuCancel").addEventListener("click", () => { menuOverlay.hidden = true; });
 menuOverlay.addEventListener("click", (e) => { if(e.target === menuOverlay) menuOverlay.hidden = true; });
 
