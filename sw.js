@@ -1,4 +1,4 @@
-const CACHE_NAME = "objectifs2026-v1";
+const CACHE_NAME = "objectifs2026-v3";
 const ASSETS = [
   "./",
   "./index.html",
@@ -24,7 +24,33 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
+// Fichiers qui changent souvent (code de l'app) -> network-first.
+// On va toujours chercher la dernière version sur le réseau ; le cache
+// ne sert que de secours si l'iPhone est hors ligne.
+const NETWORK_FIRST = ["/index.html", "/app.js", "/"];
+
+function isNetworkFirst(url){
+  const path = new URL(url).pathname;
+  return NETWORK_FIRST.some((p) => path === p || path.endsWith(p));
+}
+
 self.addEventListener("fetch", (event) => {
+  if(event.request.method !== "GET") return;
+
+  if(isNetworkFirst(event.request.url)){
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Ressources statiques (CSS, manifest, icône...) -> cache-first, comme avant.
   event.respondWith(
     caches.match(event.request).then((cached) => {
       return cached || fetch(event.request).then((response) => {
