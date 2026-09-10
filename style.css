@@ -12,6 +12,46 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* Mode sombre automatique (préférence "Système") */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg: #0B0B0C;
+    --card: #18181A;
+    --text: #F2F2F3;
+    --text-secondary: #9A9A9E;
+    --border: #2C2C2E;
+    --accent-soft: #12263D;
+  }
+}
+/* Mode sombre forcé depuis les réglages */
+:root[data-theme="dark"]{
+  --bg: #0B0B0C;
+  --card: #18181A;
+  --text: #F2F2F3;
+  --text-secondary: #9A9A9E;
+  --border: #2C2C2E;
+  --accent-soft: #12263D;
+}
+/* Mode clair forcé, même si le système est en sombre */
+:root[data-theme="light"]{
+  --bg: #FAFAFA;
+  --card: #FFFFFF;
+  --text: #1C1C1E;
+  --text-secondary: #8A8A8E;
+  --border: #E5E5EA;
+  --accent-soft: #E8F2FF;
+}
+
+/* Respecte la préférence de réduction de mouvement du système, sur tout */
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 html, body{
@@ -26,6 +66,10 @@ html, body{
 
 body{
   padding-bottom: calc(90px + var(--safe-bottom));
+  transition: background-color .2s ease, color .2s ease;
+}
+body.no-scroll{
+  overflow: hidden;
 }
 
 button{ font-family: inherit; }
@@ -36,6 +80,7 @@ button{ font-family: inherit; }
   align-items: center;
   justify-content: space-between;
   padding: calc(20px + var(--safe-top)) 20px 8px;
+  gap: 12px;
 }
 .topbar h1{
   font-size: 28px;
@@ -43,12 +88,27 @@ button{ font-family: inherit; }
   letter-spacing: -0.02em;
   margin: 0;
 }
+.header-main{
+  align-items: flex-start;
+}
+.header-text{
+  min-width: 0;
+}
+.header-text h1{
+  font-size: 24px;
+}
+.header-subtitle{
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
 .icon-btn{
   background: none;
   border: none;
   color: var(--text-secondary);
   padding: 8px;
   display: flex;
+  flex: none;
   cursor: pointer;
 }
 .icon-btn-spacer{
@@ -66,7 +126,7 @@ main{
 
 /* Summary */
 .summary{
-  margin: 12px 0 20px;
+  margin: 12px 0 16px;
 }
 .summary-stats{
   display: flex;
@@ -81,6 +141,17 @@ main{
   padding: 12px 10px;
   text-align: center;
 }
+.stat-btn{
+  cursor: pointer;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+.stat-btn.active{
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
 .stat-value{
   display: block;
   font-size: 22px;
@@ -92,6 +163,9 @@ main{
   font-size: 12px;
   color: var(--text-secondary);
   margin-top: 2px;
+}
+.stat-btn.active .stat-label{
+  color: var(--accent);
 }
 .global-progress{
   display: flex;
@@ -110,7 +184,7 @@ main{
   background: var(--accent);
   border-radius: 4px;
   width: 0%;
-  transition: width .3s ease;
+  transition: width .25s ease;
 }
 .global-progress-label{
   font-size: 13px;
@@ -120,13 +194,66 @@ main{
   text-align: right;
 }
 
-/* Filters */
+/* Year switcher */
+.year-switcher{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+.year-arrow{
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 20px;
+  line-height: 1;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+.year-label{
+  font-size: 15px;
+  font-weight: 600;
+  min-width: 44px;
+  text-align: center;
+}
+
+/* Period tabs */
+.period-tabs{
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.period-tab{
+  flex: 1;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text-secondary);
+  border-radius: 10px;
+  padding: 8px 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+}
+.period-tab.active{
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg);
+}
+
+/* Toolbar : filtres catégorie + tri */
+.list-toolbar{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
 .filters{
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding-bottom: 4px;
-  margin-bottom: 16px;
+  flex: 1;
   scrollbar-width: none;
 }
 .filters::-webkit-scrollbar{ display: none; }
@@ -144,7 +271,18 @@ main{
 .filter-chip.active{
   background: var(--text);
   border-color: var(--text);
-  color: #fff;
+  color: var(--bg);
+}
+.sort-select{
+  flex: none;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text-secondary);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 7px 10px;
+  max-width: 120px;
 }
 
 /* Goal list */
@@ -163,9 +301,21 @@ main{
   align-items: flex-start;
   gap: 12px;
   cursor: pointer;
+  animation: cardIn .2s ease;
+  touch-action: pan-y;
+}
+@keyframes cardIn{
+  from{ opacity: 0; transform: translateY(4px); }
+  to{ opacity: 1; transform: translateY(0); }
 }
 .goal-card.done{
   opacity: 0.55;
+}
+.goal-card.dragging{
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  z-index: 5;
+  position: relative;
+  cursor: grabbing;
 }
 
 .check{
@@ -181,11 +331,13 @@ main{
   background: none;
   color: transparent;
   cursor: pointer;
+  transition: transform .15s ease, background-color .15s ease, border-color .15s ease;
 }
 .check.checked{
   background: var(--accent);
   border-color: var(--accent);
   color: #fff;
+  transform: scale(1.05);
 }
 
 .goal-body{
@@ -227,6 +379,13 @@ main{
   font-weight: 600;
   color: var(--text);
   margin-bottom: 5px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.checkpoint-count{
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 .progress-track{
   height: 6px;
@@ -238,6 +397,7 @@ main{
   height: 100%;
   background: var(--accent);
   border-radius: 3px;
+  transition: width .25s ease;
 }
 
 /* Empty state */
@@ -246,6 +406,15 @@ main{
   color: var(--text-secondary);
   font-size: 14px;
   margin-top: 60px;
+}
+
+/* Footer */
+.app-footer{
+  text-align: center;
+  padding: 28px 20px 4px;
+  font-size: 12.5px;
+  font-style: italic;
+  color: var(--text-secondary);
 }
 
 /* FAB */
@@ -297,12 +466,14 @@ main{
   background: var(--border);
   border-radius: 3px;
   margin: 8px auto 4px;
+  touch-action: none;
 }
 .sheet-header{
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 8px 0 16px;
+  touch-action: none;
 }
 .sheet-header h2{
   font-size: 17px;
@@ -349,6 +520,10 @@ main{
   flex-wrap: wrap;
   gap: 16px;
 }
+.progress-fields-row{
+  display: flex;
+  gap: 16px;
+}
 .field-half{
   flex: 1;
   min-width: 120px;
@@ -385,9 +560,65 @@ main{
   cursor: pointer;
 }
 
-/* Page Réglages */
-#settingsView main{
-  padding-top: 20px;
+/* Checkpoints editor (dans le formulaire) */
+.checkpoints-editor{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.checkpoint-row{
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.checkpoint-row input{
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 10px;
+}
+.checkpoint-row .cp-value{
+  width: 90px;
+  flex: none;
+}
+.checkpoint-row .cp-label{
+  flex: 1;
+  min-width: 0;
+}
+.checkpoint-remove{
+  flex: none;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 18px;
+  padding: 4px 6px;
+  cursor: pointer;
+}
+.add-checkpoint-btn{
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 2px 0;
+  cursor: pointer;
+}
+
+/* Réglages */
+.settings-section{
+  margin-bottom: 24px;
+}
+.settings-title{
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin: 0 0 8px 4px;
 }
 .settings-list{
   display: flex;
@@ -407,6 +638,54 @@ main{
   cursor: pointer;
 }
 .menu-item-danger{
+  color: var(--danger);
+}
+.menu-item-accent{
+  color: var(--accent);
+  font-weight: 600;
+}
+.radio-item{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.radio-dot{
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.8px solid var(--border);
+  flex: none;
+}
+.radio-item.active .radio-dot{
+  border-color: var(--accent);
+  background: var(--accent);
+  box-shadow: inset 0 0 0 3px var(--card);
+}
+.update-status{
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 10px 4px 0;
+}
+.category-row{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.category-row .cat-actions{
+  display: flex;
+  gap: 14px;
+  flex: none;
+}
+.category-row button{
+  background: none;
+  border: none;
+  font-size: 13px;
+  padding: 2px;
+  cursor: pointer;
+  color: var(--accent);
+}
+.category-row button.cat-delete{
   color: var(--danger);
 }
 

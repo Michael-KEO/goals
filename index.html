@@ -7,16 +7,19 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Objectifs">
 <meta name="theme-color" content="#FAFAFA">
-<title>Objectifs 2026</title>
-<link rel="manifest" href="manifest.json">
+<title>Objectifs</title>
+<link rel="manifest" href="manifest.json?v=2">
 <link rel="apple-touch-icon" href="icon.png">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
 
   <div id="mainView">
-    <header class="topbar">
-      <h1>Objectifs 2026</h1>
+    <header class="topbar header-main">
+      <div class="header-text">
+        <h1 id="greeting">Bonjour</h1>
+        <p class="header-subtitle" id="headerSubtitle"></p>
+      </div>
       <button id="menuBtn" class="icon-btn" aria-label="Réglages">
         <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></svg>
       </button>
@@ -24,10 +27,16 @@
 
     <main>
       <section class="summary">
-        <div class="summary-stats">
-          <div class="stat"><span class="stat-value" id="statTotal">0</span><span class="stat-label">objectifs</span></div>
-          <div class="stat"><span class="stat-value" id="statDone">0</span><span class="stat-label">terminés</span></div>
-          <div class="stat"><span class="stat-value" id="statOngoing">0</span><span class="stat-label">en cours</span></div>
+        <div class="summary-stats" id="summaryStats">
+          <button class="stat stat-btn active" data-filter="all" type="button">
+            <span class="stat-value" id="statTotal">0</span><span class="stat-label">Tous</span>
+          </button>
+          <button class="stat stat-btn" data-filter="ongoing" type="button">
+            <span class="stat-value" id="statOngoing">0</span><span class="stat-label">En cours</span>
+          </button>
+          <button class="stat stat-btn" data-filter="done" type="button">
+            <span class="stat-value" id="statDone">0</span><span class="stat-label">Terminés</span>
+          </button>
         </div>
         <div class="global-progress">
           <div class="global-progress-track">
@@ -37,47 +46,101 @@
         </div>
       </section>
 
-      <nav class="filters" id="filters" aria-label="Filtrer par catégorie">
-        <button class="filter-chip active" data-category="all">Tout</button>
+      <div class="year-switcher">
+        <button id="yearPrev" class="year-arrow" aria-label="Année précédente" type="button">‹</button>
+        <span class="year-label" id="yearLabel">2026</span>
+        <button id="yearNext" class="year-arrow" aria-label="Année suivante" type="button">›</button>
+      </div>
+
+      <nav class="period-tabs" id="periodTabs" aria-label="Filtrer par période">
+        <button class="period-tab active" data-period="all" type="button">Année</button>
+        <button class="period-tab" data-period="Q1" type="button">T1</button>
+        <button class="period-tab" data-period="Q2" type="button">T2</button>
+        <button class="period-tab" data-period="Q3" type="button">T3</button>
+        <button class="period-tab" data-period="Q4" type="button">T4</button>
       </nav>
+
+      <div class="list-toolbar">
+        <nav class="filters" id="filters" aria-label="Filtrer par catégorie">
+          <button class="filter-chip active" data-category="all" type="button">Tout</button>
+        </nav>
+        <select id="sortSelect" class="sort-select" aria-label="Trier les objectifs">
+          <option value="custom">Personnalisé</option>
+          <option value="alpha">Alphabétique</option>
+          <option value="progress">Progression</option>
+          <option value="category">Catégorie</option>
+          <option value="deadline">Deadline</option>
+        </select>
+      </div>
 
       <section class="goal-list" id="goalList"></section>
 
       <p class="empty-state" id="emptyState" hidden>Aucun objectif ici. Ajoute-en un avec le bouton +.</p>
     </main>
 
+    <footer class="app-footer" id="appFooter"></footer>
+
     <button id="addBtn" class="fab" aria-label="Ajouter un objectif">
       <svg viewBox="0 0 24 24" width="26" height="26"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
     </button>
   </div>
 
-  <!-- Page Réglages (pas un popup, une vraie page) -->
+  <!-- Page Réglages -->
   <div id="settingsView" hidden>
     <header class="topbar">
-      <button id="settingsBack" class="icon-btn back-btn" aria-label="Retour">
+      <button id="settingsBack" class="icon-btn back-btn" aria-label="Retour" type="button">
         <svg viewBox="0 0 24 24" width="22" height="22"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
       <h1>Réglages</h1>
       <span class="icon-btn-spacer"></span>
     </header>
     <main>
-      <div class="settings-list">
-        <button class="menu-item" id="exportBtn">Exporter les données (JSON)</button>
-        <label class="menu-item" for="importInput">Importer des données (JSON)</label>
-        <input type="file" id="importInput" accept="application/json" hidden>
-        <button class="menu-item menu-item-danger" id="resetBtn">Réinitialiser les données</button>
+
+      <div class="settings-section">
+        <h2 class="settings-title">Apparence</h2>
+        <div class="settings-list" id="themeOptions">
+          <button class="menu-item radio-item" data-theme="system" type="button"><span>Système</span><span class="radio-dot"></span></button>
+          <button class="menu-item radio-item" data-theme="light" type="button"><span>Clair</span><span class="radio-dot"></span></button>
+          <button class="menu-item radio-item" data-theme="dark" type="button"><span>Sombre</span><span class="radio-dot"></span></button>
+        </div>
       </div>
+
+      <div class="settings-section">
+        <h2 class="settings-title">Catégories</h2>
+        <div class="settings-list" id="categoryList"></div>
+        <button class="menu-item" id="addCategoryBtn" type="button">+ Ajouter une catégorie</button>
+      </div>
+
+      <div class="settings-section">
+        <h2 class="settings-title">Données</h2>
+        <div class="settings-list">
+          <button class="menu-item" id="exportBtn" type="button">Exporter les données (JSON)</button>
+          <label class="menu-item" for="importInput">Importer des données (JSON)</label>
+          <input type="file" id="importInput" accept="application/json" hidden>
+          <button class="menu-item menu-item-danger" id="resetBtn" type="button">Réinitialiser les données</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h2 class="settings-title">Mise à jour</h2>
+        <div class="settings-list">
+          <button class="menu-item" id="checkUpdateBtn" type="button">Rechercher une mise à jour</button>
+          <p class="update-status" id="updateStatus"></p>
+          <button class="menu-item menu-item-accent" id="applyUpdateBtn" type="button" hidden>Mettre à jour</button>
+        </div>
+      </div>
+
     </main>
   </div>
 
   <!-- Formulaire d'ajout / édition -->
   <div class="sheet-overlay" id="formOverlay" hidden>
-    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="formTitle">
-      <div class="sheet-handle"></div>
-      <div class="sheet-header">
-        <button class="text-btn" id="formCancel">Annuler</button>
+    <div class="sheet" id="formSheet" role="dialog" aria-modal="true" aria-labelledby="formTitle">
+      <div class="sheet-handle" id="sheetHandle"></div>
+      <div class="sheet-header" id="sheetHeader">
+        <button class="text-btn" id="formCancel" type="button">Annuler</button>
         <h2 id="formTitle">Nouvel objectif</h2>
-        <button class="text-btn text-btn-primary" id="formSave">Enregistrer</button>
+        <button class="text-btn text-btn-primary" id="formSave" type="button">Enregistrer</button>
       </div>
       <form id="goalForm" class="sheet-body">
         <label class="field">
@@ -110,6 +173,29 @@
           <label class="field">
             <span>Unité (optionnel)</span>
             <input type="text" id="fUnit" maxlength="10" placeholder="€">
+          </label>
+
+          <div class="field">
+            <span>Étapes (optionnel)</span>
+            <div id="checkpointsEditor" class="checkpoints-editor"></div>
+            <button type="button" id="addCheckpointBtn" class="add-checkpoint-btn">+ Ajouter une étape</button>
+          </div>
+        </div>
+
+        <div class="progress-fields-row">
+          <label class="field field-half">
+            <span>Année</span>
+            <input type="number" id="fYear" min="2000" max="2100" step="1" placeholder="2026">
+          </label>
+          <label class="field field-half">
+            <span>Période</span>
+            <select id="fPeriod">
+              <option value="all">Année</option>
+              <option value="Q1">T1</option>
+              <option value="Q2">T2</option>
+              <option value="Q3">T3</option>
+              <option value="Q4">T4</option>
+            </select>
           </label>
         </div>
 

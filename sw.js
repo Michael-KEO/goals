@@ -1,10 +1,10 @@
-const CACHE_NAME = "objectifs2026-v5";
+const CACHE_NAME = "objectifs2026-v7";
 const ASSETS = [
   "./",
   "./index.html",
-  "./style.css",
+  "./style.css?v=7",
   "./app.js",
-  "./manifest.json",
+  "./manifest.json?v=2",
   "./icon.png"
 ];
 
@@ -12,7 +12,14 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
   );
-  self.skipWaiting();
+  // Pas de skipWaiting automatique ici : le nouveau SW reste "en attente"
+  // jusqu'à ce que l'utilisateur confirme via Réglages > Mise à jour.
+});
+
+self.addEventListener("message", (event) => {
+  if(event.data && event.data.type === "SKIP_WAITING"){
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("activate", (event) => {
