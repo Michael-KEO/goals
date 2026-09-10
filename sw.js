@@ -1,8 +1,8 @@
-const CACHE_NAME = "objectifs2026-v11";
+const CACHE_NAME = "objectifs2026-v12";
 const ASSETS = [
   "./",
   "./index.html",
-  "./style.css?v=11",
+  "./style.css?v=12",
   "./app.js",
   "./manifest.json?v=2",
   "./icon.png"

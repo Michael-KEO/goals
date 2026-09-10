@@ -19,7 +19,7 @@
 
 const STORAGE_KEY = "objectifs2026_data";
 const DATA_VERSION = 2;
-const USER_NAME = "Michael";
+const USER_NAME = "";
 const DEFAULT_CATEGORIES = ["Argent", "Travail", "Voyage", "Sport", "Achats", "Personnel"];
 const QUOTES = [
   "Small steps every day.",
@@ -31,8 +31,8 @@ const QUOTES = [
 
 const SEED_GOALS = [
   {
-    id: "g1", name: "Épargner mes premiers 1000 €", category: "Argent",
-    type: "progress", completed: false, current: 0, target: 1000, unit: "€",
+    id: "g1", name: "Épargner 1000 €", category: "Argent",
+    type: "progress", completed: false, current: 150, target: 1000, unit: "€",
     checkpoints: [
       { value: 200, label: "200 €" },
       { value: 500, label: "500 €" },
@@ -42,37 +42,38 @@ const SEED_GOALS = [
     completedAt: null, photo: null, createdAt: 1
   },
   {
-    id: "g2", name: "Trouver un job à temps partiel", category: "Travail",
-    type: "binary", completed: false, current: null, target: null, unit: "", checkpoints: [],
-    deadline: "2026-09-30", note: null, year: 2026, period: "all", order: 1,
+    id: "g2", name: "Lire 12 livres", category: "Personnel",
+    type: "progress", completed: false, current: 3, target: 12, unit: "livres",
+    checkpoints: [],
+    deadline: null, note: null, year: 2026, period: "all", order: 1,
     completedAt: null, photo: null, createdAt: 2
   },
   {
-    id: "g3", name: "Trouver mon stage", category: "Travail",
+    id: "g3", name: "Apprendre les bases d'une nouvelle langue", category: "Personnel",
     type: "binary", completed: false, current: null, target: null, unit: "", checkpoints: [],
-    deadline: "2026-10-31", note: "Idéalement à l'étranger", year: 2026, period: "all", order: 2,
+    deadline: "2026-12-31", note: null, year: 2026, period: "all", order: 2,
     completedAt: null, photo: null, createdAt: 3
   },
   {
-    id: "g4", name: "Avoir un entretien pour un stage", category: "Travail",
+    id: "g4", name: "Trouver un nouveau job", category: "Travail",
     type: "binary", completed: false, current: null, target: null, unit: "", checkpoints: [],
-    deadline: "2026-10-15", note: null, year: 2026, period: "all", order: 3,
+    deadline: "2026-10-31", note: null, year: 2026, period: "all", order: 3,
     completedAt: null, photo: null, createdAt: 4
   },
   {
-    id: "g5", name: "Voyager à Amsterdam", category: "Voyage",
+    id: "g5", name: "Partir en voyage", category: "Voyage",
     type: "binary", completed: false, current: null, target: null, unit: "", checkpoints: [],
-    deadline: null, note: null, year: 2026, period: "all", order: 4,
+    deadline: null, note: "Destination à définir", year: 2026, period: "all", order: 4,
     completedAt: null, photo: null, createdAt: 5
   },
   {
-    id: "g6", name: "Participer à une course", category: "Sport",
+    id: "g6", name: "Courir 5 km sans s'arrêter", category: "Sport",
     type: "binary", completed: false, current: null, target: null, unit: "", checkpoints: [],
-    deadline: null, note: "Marathon ou semi-marathon", year: 2026, period: "all", order: 5,
+    deadline: null, note: null, year: 2026, period: "all", order: 5,
     completedAt: null, photo: null, createdAt: 6
   },
   {
-    id: "g7", name: "Acheter une Apple Watch Series 8", category: "Achats",
+    id: "g7", name: "S'acheter quelque chose qui me fait plaisir", category: "Achats",
     type: "binary", completed: false, current: null, target: null, unit: "", checkpoints: [],
     deadline: null, note: null, year: 2026, period: "all", order: 6,
     completedAt: null, photo: null, createdAt: 7
@@ -318,10 +319,11 @@ function renderAll(){
 
 function getGreeting(){
   const h = new Date().getHours();
+  const suffix = USER_NAME ? ` ${USER_NAME}` : "";
   if(h < 5) return "Hello, oiseau nocturne 🦉";
-  if(h < 12) return `Bonjour ${USER_NAME}`;
-  if(h < 18) return `Bon après-midi ${USER_NAME}`;
-  if(h < 23) return `Bonsoir ${USER_NAME}`;
+  if(h < 12) return `Bonjour${suffix}`;
+  if(h < 18) return `Bon après-midi${suffix}`;
+  if(h < 23) return `Bonsoir${suffix}`;
   return "Hello, oiseau nocturne 🦉";
 }
 
