@@ -10,7 +10,7 @@
 <title>Objectifs</title>
 <link rel="manifest" href="manifest.json?v=2">
 <link rel="apple-touch-icon" href="icon.png">
-<link rel="stylesheet" href="style.css?v=8">
+<link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
 
@@ -18,12 +18,32 @@
     <header class="topbar header-main">
       <div class="header-text">
         <h1 id="greeting">Bonjour</h1>
-        <p class="header-subtitle" id="headerSubtitle"></p>
+        <button type="button" class="header-subtitle-btn" id="headerSubtitle" aria-haspopup="true" aria-expanded="false">
+          <span id="headerSubtitleText"></span>
+          <span class="chevron">▾</span>
+        </button>
       </div>
       <button id="menuBtn" class="icon-btn" aria-label="Réglages">
         <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></svg>
       </button>
     </header>
+
+    <div class="period-popover-overlay" id="periodPopoverOverlay" hidden>
+      <div class="period-popover" id="periodPopover" role="dialog" aria-modal="true" aria-label="Choisir l'année et la période">
+        <div class="popover-year-row">
+          <button type="button" class="year-arrow" id="yearPrev" aria-label="Année précédente">‹</button>
+          <span class="year-label" id="yearLabel">2026</span>
+          <button type="button" class="year-arrow" id="yearNext" aria-label="Année suivante">›</button>
+        </div>
+        <div class="popover-period-row" id="periodTabs" aria-label="Filtrer par période">
+          <button class="period-tab active" data-period="all" type="button">Année</button>
+          <button class="period-tab" data-period="Q1" type="button">T1</button>
+          <button class="period-tab" data-period="Q2" type="button">T2</button>
+          <button class="period-tab" data-period="Q3" type="button">T3</button>
+          <button class="period-tab" data-period="Q4" type="button">T4</button>
+        </div>
+      </div>
+    </div>
 
     <main>
       <div class="update-banner" id="updateBanner" hidden>
@@ -50,20 +70,6 @@
           <span class="global-progress-label" id="globalProgressLabel">0 %</span>
         </div>
       </section>
-
-      <div class="year-switcher">
-        <button id="yearPrev" class="year-arrow" aria-label="Année précédente" type="button">‹</button>
-        <span class="year-label" id="yearLabel">2026</span>
-        <button id="yearNext" class="year-arrow" aria-label="Année suivante" type="button">›</button>
-      </div>
-
-      <nav class="period-tabs" id="periodTabs" aria-label="Filtrer par période">
-        <button class="period-tab active" data-period="all" type="button">Année</button>
-        <button class="period-tab" data-period="Q1" type="button">T1</button>
-        <button class="period-tab" data-period="Q2" type="button">T2</button>
-        <button class="period-tab" data-period="Q3" type="button">T3</button>
-        <button class="period-tab" data-period="Q4" type="button">T4</button>
-      </nav>
 
       <div class="list-toolbar">
         <nav class="filters" id="filters" aria-label="Filtrer par catégorie">
@@ -109,8 +115,14 @@
 
       <div class="settings-section">
         <h2 class="settings-title">Catégories</h2>
-        <div class="settings-list" id="categoryList"></div>
-        <button class="menu-item" id="addCategoryBtn" type="button">+ Ajouter une catégorie</button>
+        <button class="menu-item accordion-toggle" id="categoriesToggle" type="button" aria-expanded="false" aria-controls="categoriesPanel">
+          <span>Gérer les catégories</span>
+          <span class="accordion-chevron">›</span>
+        </button>
+        <div class="accordion-panel" id="categoriesPanel" hidden>
+          <div class="settings-list" id="categoryList"></div>
+          <button class="menu-item" id="addCategoryBtn" type="button">+ Ajouter une catégorie</button>
+        </div>
       </div>
 
       <div class="settings-section">
@@ -217,6 +229,9 @@
   </div>
 
   <nav class="bottom-nav" id="bottomNav" aria-label="Navigation principale">
+    <svg class="bottom-nav-shape" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0,0.5 L36,0.5 C41,0.5 43,9.5 50,9.5 C57,9.5 59,0.5 64,0.5 L100,0.5 L100,20 L0,20 Z" />
+    </svg>
     <button type="button" class="nav-item active" id="navGoalsBtn" aria-label="Objectifs">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       <span>Objectifs</span>

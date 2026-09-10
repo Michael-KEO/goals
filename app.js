@@ -327,11 +327,11 @@ function getGreeting(){
 
 function renderHeader(){
   document.getElementById("greeting").textContent = getGreeting();
-  const now = new Date();
-  const q = getQuarter(now);
-  const ongoing = state.goals.filter(g => g.year === selectedYear && !isDone(g)).length;
-  document.getElementById("headerSubtitle").textContent =
-    `T${q} ${selectedYear} · ${ongoing} objectif${ongoing !== 1 ? "s" : ""} en cours`;
+  const periodLabel = activePeriod === "all" ? "Année" : activePeriod;
+  const ongoing = state.goals.filter(g => g.year === selectedYear
+    && (activePeriod === "all" || g.period === activePeriod) && !isDone(g)).length;
+  document.getElementById("headerSubtitleText").textContent =
+    `${periodLabel} ${selectedYear} · ${ongoing} objectif${ongoing !== 1 ? "s" : ""} en cours`;
 }
 
 function renderYearSwitcher(){
@@ -845,7 +845,25 @@ function attachSheetSwipe(){
   });
 }
 
-/* ---------- Année / période / statut / tri ---------- */
+/* ---------- Année / période (popover) ---------- */
+const headerSubtitleBtn = document.getElementById("headerSubtitle");
+const periodPopoverOverlay = document.getElementById("periodPopoverOverlay");
+
+function openPeriodPopover(){
+  periodPopoverOverlay.hidden = false;
+  headerSubtitleBtn.setAttribute("aria-expanded", "true");
+}
+function closePeriodPopover(){
+  periodPopoverOverlay.hidden = true;
+  headerSubtitleBtn.setAttribute("aria-expanded", "false");
+}
+headerSubtitleBtn.addEventListener("click", () => {
+  if(periodPopoverOverlay.hidden) openPeriodPopover(); else closePeriodPopover();
+});
+periodPopoverOverlay.addEventListener("click", (e) => {
+  if(e.target === periodPopoverOverlay) closePeriodPopover();
+});
+
 document.getElementById("yearPrev").addEventListener("click", () => {
   selectedYear -= 1;
   state.preferences.lastYear = selectedYear;
@@ -860,7 +878,11 @@ document.getElementById("yearNext").addEventListener("click", () => {
 });
 
 document.querySelectorAll(".period-tab").forEach(btn => {
-  btn.addEventListener("click", () => { activePeriod = btn.dataset.period; renderAll(); });
+  btn.addEventListener("click", () => {
+    activePeriod = btn.dataset.period;
+    renderAll();
+    closePeriodPopover();
+  });
 });
 
 document.querySelectorAll(".stat-btn").forEach(btn => {
@@ -880,6 +902,7 @@ const settingsView = document.getElementById("settingsView");
 
 function openSettings(){
   closeForm();
+  closePeriodPopover();
   renderThemeOptions();
   renderCategoryList();
   refreshUpdateStatus();
@@ -924,7 +947,16 @@ document.querySelectorAll("#themeOptions .radio-item").forEach(btn => {
   });
 });
 
-/* Catégories */
+/* Catégories (accordion) */
+let categoriesOpen = false;
+const categoriesToggle = document.getElementById("categoriesToggle");
+const categoriesPanel = document.getElementById("categoriesPanel");
+categoriesToggle.addEventListener("click", () => {
+  categoriesOpen = !categoriesOpen;
+  categoriesPanel.hidden = !categoriesOpen;
+  categoriesToggle.setAttribute("aria-expanded", String(categoriesOpen));
+});
+
 function renderCategoryList(){
   const container = document.getElementById("categoryList");
   container.innerHTML = "";
