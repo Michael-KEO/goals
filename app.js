@@ -19,7 +19,6 @@
 
 const STORAGE_KEY = "objectifs2026_data";
 const DATA_VERSION = 2;
-const USER_NAME = "";
 const DEFAULT_CATEGORIES = ["Argent", "Travail", "Voyage", "Sport", "Achats", "Personnel"];
 const QUOTES = [
   "Small steps every day.",
@@ -121,7 +120,7 @@ function buildFreshState(){
     version: DATA_VERSION,
     goals: SEED_GOALS.map(g => ({ ...g, checkpoints: g.checkpoints.map(cp => ({ ...cp })) })),
     categories: [...DEFAULT_CATEGORIES],
-    preferences: { theme: "system", lastYear: 2026, sortMode: "custom" }
+    preferences: { theme: "system", lastYear: 2026, sortMode: "custom", firstName: "", iosPromptSeen: false }
   };
 }
 
@@ -149,7 +148,9 @@ function migrateData(parsed){
   const preferences = {
     theme: (rawPreferences && rawPreferences.theme) || "system",
     lastYear: (rawPreferences && rawPreferences.lastYear) || (goals[0] ? goals[0].year : 2026),
-    sortMode: (rawPreferences && rawPreferences.sortMode) || "custom"
+    sortMode: (rawPreferences && rawPreferences.sortMode) || "custom",
+    firstName: (rawPreferences && rawPreferences.firstName) || "",
+    iosPromptSeen: !!(rawPreferences && rawPreferences.iosPromptSeen)
   };
 
   return { version: DATA_VERSION, goals, categories, preferences };
@@ -319,7 +320,8 @@ function renderAll(){
 
 function getGreeting(){
   const h = new Date().getHours();
-  const suffix = USER_NAME ? ` ${USER_NAME}` : "";
+  const name = state.preferences.firstName;
+  const suffix = name ? ` ${name}` : "";
   if(h < 5) return "Hello, oiseau nocturne 🦉";
   if(h < 12) return `Bonjour${suffix}`;
   if(h < 18) return `Bon après-midi${suffix}`;
@@ -922,7 +924,6 @@ function updateNavActive(){
   document.getElementById("navSettingsBtn").classList.toggle("active", !settingsView.hidden);
 }
 
-document.getElementById("menuBtn").addEventListener("click", openSettings);
 document.getElementById("settingsBack").addEventListener("click", closeSettings);
 
 /* Bottom nav */
@@ -1170,7 +1171,70 @@ function initServiceWorker(){
   });
 }
 
-/* ---------- Footer ---------- */
+/* ---------- Onboarding (prénom) ---------- */
+const onboardingOverlay = document.getElementById("onboardingOverlay");
+const onboardingName = document.getElementById("onboardingName");
+
+function saveFirstName(name){
+  state.preferences.firstName = name;
+  saveData();
+  renderHeader();
+}
+
+document.getElementById("onboardingContinue").addEventListener("click", () => {
+  saveFirstName(onboardingName.value.trim());
+  onboardingOverlay.hidden = true;
+  maybeShowInstallPrompt();
+});
+
+document.getElementById("editNameBtn").addEventListener("click", () => {
+  const input = prompt("Votre prénom", state.preferences.firstName || "");
+  if(input === null) return;
+  saveFirstName(input.trim());
+});
+
+/* ---------- Installation PWA (iOS Safari) ---------- */
+function isIosSafariNotInstalled(){
+  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+  const standalone = window.navigator.standalone === true
+    || window.matchMedia("(display-mode: standalone)").matches;
+  return isIos && !standalone;
+}
+
+const installOverlay = document.getElementById("installOverlay");
+const installStep1 = document.getElementById("installStep1");
+const installStep2 = document.getElementById("installStep2");
+const installHowBtn = document.getElementById("installHowBtn");
+
+function openInstallOverlay(){
+  installStep1.hidden = false;
+  installStep2.hidden = true;
+  installHowBtn.hidden = false;
+  installOverlay.hidden = false;
+}
+function closeInstallOverlay(markSeen){
+  installOverlay.hidden = true;
+  if(markSeen){ state.preferences.iosPromptSeen = true; saveData(); }
+}
+installHowBtn.addEventListener("click", () => {
+  installStep2.hidden = false;
+  installHowBtn.hidden = true;
+});
+document.getElementById("installCloseBtn").addEventListener("click", () => closeInstallOverlay(true));
+
+function maybeShowInstallPrompt(){
+  if(isIosSafariNotInstalled() && !state.preferences.iosPromptSeen) openInstallOverlay();
+}
+
+document.getElementById("showInstallBtn").addEventListener("click", () => {
+  closeSettings();
+  openInstallOverlay();
+});
+if(isIosSafariNotInstalled()){
+  document.getElementById("installSettingsSection").hidden = false;
+}
+
+
 function renderFooterQuote(){
   const el = document.getElementById("appFooter");
   el.textContent = QUOTES[Math.floor(Math.random() * QUOTES.length)];
@@ -1189,3 +1253,8 @@ attachSheetSwipe();
 updateNavActive();
 renderAll();
 initServiceWorker();
+if(!state.preferences.firstName){
+  onboardingOverlay.hidden = false;
+}else{
+  maybeShowInstallPrompt();
+}

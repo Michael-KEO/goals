@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Objectifs">
+<meta name="apple-mobile-web-app-title" content="Telos">
 <meta name="theme-color" content="#FAFAFA">
-<title>Objectifs</title>
-<link rel="manifest" href="manifest.json?v=2">
+<title>Telos</title>
+<link rel="manifest" href="manifest.json?v=3">
 <link rel="apple-touch-icon" href="icon.png">
-<link rel="stylesheet" href="style.css?v=12">
+<link rel="stylesheet" href="style.css?v=13">
 </head>
 <body>
 
@@ -23,9 +23,6 @@
           <svg class="chevron" viewBox="0 0 24 24" width="12" height="12"><path d="M5 9l7 7 7-7" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
       </div>
-      <button id="menuBtn" class="icon-btn" aria-label="Réglages">
-        <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></svg>
-      </button>
     </header>
 
     <div class="period-popover-overlay" id="periodPopoverOverlay" hidden>
@@ -105,6 +102,13 @@
     <main>
 
       <div class="settings-section">
+        <h2 class="settings-title">Profil</h2>
+        <div class="settings-list">
+          <button class="menu-item" id="editNameBtn" type="button">Modifier mon prénom</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
         <h2 class="settings-title">Apparence</h2>
         <div class="settings-list" id="themeOptions">
           <button class="menu-item radio-item" data-theme="system" type="button"><span>Système</span><span class="radio-dot"></span></button>
@@ -143,6 +147,18 @@
           <button class="menu-item menu-item-accent" id="applyUpdateBtn" type="button" hidden>Mettre à jour</button>
         </div>
       </div>
+
+      <div class="settings-section" id="installSettingsSection" hidden>
+        <h2 class="settings-title">Installation</h2>
+        <div class="settings-list">
+          <button class="menu-item" id="showInstallBtn" type="button">Revoir l'invitation à l'installation</button>
+        </div>
+      </div>
+
+      <p class="about-telos">
+        <strong>À propos de Telos</strong><br>
+        Telos (τέλος) est un mot grec ancien qui signifie notamment « fin », « but », « objectif » ou « finalité ». Il désigne ce vers quoi une chose tend : son accomplissement.
+      </p>
 
     </main>
   </div>
@@ -244,6 +260,41 @@
       <span>Réglages</span>
     </button>
   </nav>
+
+  <div class="sheet-overlay" id="onboardingOverlay" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle">
+      <div class="sheet-body" style="padding-top:20px;">
+        <h2 id="onboardingTitle" style="margin:0;">Bienvenue sur Telos 👋</h2>
+        <p style="color:var(--text-secondary);font-size:14px;margin:0;">Comment souhaitez-vous qu'on vous appelle ?</p>
+        <label class="field">
+          <span>Prénom</span>
+          <input type="text" id="onboardingName" maxlength="30" placeholder="Votre prénom">
+        </label>
+        <button type="button" class="text-btn text-btn-primary" id="onboardingContinue" style="align-self:flex-end;">Continuer</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="installOverlay" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="installTitle">
+      <div class="sheet-body" style="padding-top:20px;">
+        <h2 id="installTitle" style="margin:0;">Bienvenue sur Telos 👋</h2>
+        <p style="color:var(--text-secondary);font-size:14px;margin:0;">Fais de Telos ton espace personnel pour suivre tes objectifs et voir tes progrès tout au long de l'année.</p>
+        <div id="installStep1">
+          <p style="font-weight:600;margin:8px 0 0;">Ajoute Telos à ton écran d'accueil</p>
+          <p style="color:var(--text-secondary);font-size:14px;margin:2px 0 0;">Pour une expérience plus rapide et plus immersive.</p>
+        </div>
+        <div id="installStep2" hidden>
+          <p style="font-weight:600;margin:8px 0 0;">Comment l'ajouter ?</p>
+          <p style="font-size:14px;margin:6px 0 0;">1. Appuie sur le bouton Partager de Safari</p>
+          <p style="font-size:14px;margin:4px 0 0;">2. Sélectionne « Ajouter à l'écran d'accueil »</p>
+          <p style="font-size:14px;margin:4px 0 0;">3. Appuie sur « Ajouter »</p>
+        </div>
+        <button type="button" class="text-btn text-btn-primary" id="installHowBtn" style="align-self:flex-end;">Comment l'ajouter ?</button>
+        <button type="button" class="text-btn" id="installCloseBtn" style="align-self:flex-end;">Plus tard</button>
+      </div>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>
