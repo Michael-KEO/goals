@@ -65,7 +65,7 @@ html, body{
 }
 
 body{
-  padding-bottom: calc(90px + var(--safe-bottom));
+  padding-bottom: calc(86px + var(--safe-bottom));
   transition: background-color .2s ease, color .2s ease;
 }
 body.no-scroll{
@@ -79,7 +79,7 @@ button{ font-family: inherit; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: calc(20px + var(--safe-top)) 20px 8px;
+  padding: calc(14px + var(--safe-top)) 20px 6px;
   gap: 12px;
 }
 .topbar h1{
@@ -126,7 +126,7 @@ main{
 
 /* Summary */
 .summary{
-  margin: 12px 0 16px;
+  margin: 8px 0 12px;
 }
 .summary-stats{
   display: flex;
@@ -200,7 +200,7 @@ main{
   align-items: center;
   justify-content: center;
   gap: 14px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 .year-arrow{
   background: none;
@@ -222,7 +222,7 @@ main{
 .period-tabs{
   display: flex;
   gap: 6px;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 .period-tab{
   flex: 1;
@@ -247,7 +247,7 @@ main{
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 .filters{
   display: flex;
@@ -303,6 +303,9 @@ main{
   cursor: pointer;
   animation: cardIn .2s ease;
   touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 @keyframes cardIn{
   from{ opacity: 0; transform: translateY(4px); }
@@ -417,13 +420,71 @@ main{
   color: var(--text-secondary);
 }
 
-/* FAB */
-.fab{
+/* Bandeau de mise à jour */
+.update-banner{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--accent-soft);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--text);
+}
+.update-banner[hidden]{
+  display: none;
+}
+.update-banner button{
+  flex: none;
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 13px;
+  padding: 2px;
+  cursor: pointer;
+}
+
+/* Bottom navigation */
+.bottom-nav{
   position: fixed;
-  right: 20px;
-  bottom: calc(24px + var(--safe-bottom));
-  width: 56px;
-  height: 56px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  padding: 8px 12px calc(8px + var(--safe-bottom));
+}
+.nav-item{
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: color .18s ease;
+}
+.nav-item.active{
+  color: var(--accent);
+}
+.nav-add-btn{
+  flex: none;
+  width: 52px;
+  height: 52px;
+  margin: -18px 10px 0;
   border-radius: 50%;
   background: var(--accent);
   color: #fff;
@@ -431,8 +492,12 @@ main{
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 14px rgba(10,132,255,0.35);
+  box-shadow: 0 4px 14px rgba(10,132,255,0.3);
   cursor: pointer;
+  transition: transform .15s ease;
+}
+.nav-add-btn:active{
+  transform: scale(0.92);
 }
 
 /* Sheet / modal */

@@ -220,6 +220,27 @@ function isOverdue(g){
   const [y, m, d] = g.deadline.split("-").map(Number);
   return new Date(y, m - 1, d) < today;
 }
+function daysBetween(iso){
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const [y, m, d] = iso.split("-").map(Number);
+  const target = new Date(y, m - 1, d);
+  return Math.round((target - today) / 86400000);
+}
+// Seuil (en jours) à partir duquel on affiche le compte à rebours "J-X".
+// Au-delà, une deadline lointaine reste affichée sans compteur.
+const COUNTDOWN_THRESHOLD_DAYS = 30;
+function deadlineLabel(iso, overdue){
+  const days = daysBetween(iso);
+  if(overdue){
+    const n = Math.abs(days);
+    return "En retard · " + n + (n === 1 ? " jour" : " jours");
+  }
+  if(days === 0) return "Deadline · aujourd'hui";
+  if(days === 1) return "Deadline · demain";
+  if(days <= COUNTDOWN_THRESHOLD_DAYS) return "Deadline · " + formatDate(iso) + " · J-" + days;
+  return "Deadline · " + formatDate(iso);
+}
 function formatValue(n){
   if(n === null || n === undefined || isNaN(n)) return "0";
   return String(n);
@@ -420,12 +441,8 @@ function renderCard(g){
     meta.appendChild(dSpan);
   }else if(g.deadline){
     const dSpan = document.createElement("span");
-    if(overdue){
-      dSpan.className = "overdue";
-      dSpan.textContent = "En retard · " + formatDate(g.deadline);
-    }else{
-      dSpan.textContent = "Deadline · " + formatDate(g.deadline);
-    }
+    if(overdue) dSpan.className = "overdue";
+    dSpan.textContent = deadlineLabel(g.deadline, overdue);
     meta.appendChild(dSpan);
   }
   body.appendChild(meta);
@@ -465,6 +482,8 @@ function renderCard(g){
 
   card.appendChild(check);
   card.appendChild(body);
+
+  card.addEventListener("contextmenu", (e) => e.preventDefault());
 
   attachDrag(card, g);
 
@@ -774,7 +793,6 @@ function saveForm(){
   renderAll();
 }
 
-document.getElementById("addBtn").addEventListener("click", () => openForm(null));
 document.getElementById("formCancel").addEventListener("click", closeForm);
 document.getElementById("formSave").addEventListener("click", (e) => { e.preventDefault(); saveForm(); });
 goalForm.addEventListener("submit", (e) => { e.preventDefault(); saveForm(); });
@@ -867,14 +885,29 @@ function openSettings(){
   refreshUpdateStatus();
   mainView.hidden = true;
   settingsView.hidden = false;
+  updateNavActive();
 }
 function closeSettings(){
   settingsView.hidden = true;
   mainView.hidden = false;
+  updateNavActive();
+}
+function updateNavActive(){
+  document.getElementById("navGoalsBtn").classList.toggle("active", settingsView.hidden);
+  document.getElementById("navSettingsBtn").classList.toggle("active", !settingsView.hidden);
 }
 
 document.getElementById("menuBtn").addEventListener("click", openSettings);
 document.getElementById("settingsBack").addEventListener("click", closeSettings);
+
+/* Bottom nav */
+document.getElementById("navGoalsBtn").addEventListener("click", () => {
+  if(!settingsView.hidden) closeSettings();
+});
+document.getElementById("navSettingsBtn").addEventListener("click", () => {
+  if(settingsView.hidden) openSettings();
+});
+document.getElementById("navAddBtn").addEventListener("click", () => openForm(null));
 
 /* Apparence */
 function renderThemeOptions(){
@@ -1018,6 +1051,19 @@ function setUpdateStatus(text, showApply){
   document.getElementById("applyUpdateBtn").hidden = !showApply;
 }
 
+// Point d'entrée unique quand un SW "waiting" apparaît ou disparaît :
+// pilote à la fois le bandeau discret et le statut de la page Réglages.
+function setWaitingWorker(worker){
+  waitingWorker = worker;
+  const banner = document.getElementById("updateBanner");
+  if(waitingWorker){
+    banner.hidden = false;
+    setUpdateStatus("Nouvelle version disponible.", true);
+  }else{
+    banner.hidden = true;
+  }
+}
+
 function refreshUpdateStatus(){
   if(waitingWorker){
     setUpdateStatus("Nouvelle version disponible.", true);
@@ -1039,9 +1085,9 @@ async function checkForUpdate(){
     await reg.update();
     setTimeout(() => {
       if(reg.waiting){
-        waitingWorker = reg.waiting;
-        setUpdateStatus("Nouvelle version disponible.", true);
+        setWaitingWorker(reg.waiting);
       }else{
+        setWaitingWorker(null);
         setUpdateStatus("Vous utilisez la dernière version.", false);
       }
     }, 700);
@@ -1054,11 +1100,13 @@ function applyUpdate(){
   if(waitingWorker){
     waitingWorker.postMessage({ type: "SKIP_WAITING" });
     setUpdateStatus("Mise à jour en cours…", false);
+    document.getElementById("updateBanner").hidden = true;
   }
 }
 
 document.getElementById("checkUpdateBtn").addEventListener("click", checkForUpdate);
 document.getElementById("applyUpdateBtn").addEventListener("click", applyUpdate);
+document.getElementById("updateBannerBtn").addEventListener("click", applyUpdate);
 
 function initServiceWorker(){
   if(!("serviceWorker" in navigator)) return;
@@ -1066,14 +1114,14 @@ function initServiceWorker(){
     navigator.serviceWorker.register("sw.js").then((reg) => {
       swRegistration = reg;
       if(reg.waiting && navigator.serviceWorker.controller){
-        waitingWorker = reg.waiting;
+        setWaitingWorker(reg.waiting);
       }
       reg.addEventListener("updatefound", () => {
         const nw = reg.installing;
         if(!nw) return;
         nw.addEventListener("statechange", () => {
           if(nw.state === "installed" && navigator.serviceWorker.controller){
-            waitingWorker = nw;
+            setWaitingWorker(nw);
           }
         });
       });
@@ -1104,5 +1152,6 @@ renderThemeOptions();
 renderCategoryList();
 renderFooterQuote();
 attachSheetSwipe();
+updateNavActive();
 renderAll();
 initServiceWorker();
