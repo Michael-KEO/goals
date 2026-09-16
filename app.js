@@ -18,7 +18,7 @@
    =========================================================== */
 
 const STORAGE_KEY = "objectifs2026_data";
-const DATA_VERSION = 2;
+const DATA_VERSION = 3;
 const DEFAULT_CATEGORIES = ["Argent", "Travail", "Voyage", "Sport", "Achats", "Personnel"];
 const QUOTES = [
   "Small steps every day.",
@@ -31,7 +31,7 @@ const QUOTES = [
 const SEED_GOALS = [
   {
     id: "g1", name: "Épargner 1000 €", category: "Argent",
-    type: "progress", completed: false, current: 150, target: 1000, unit: "€",
+    mode: "measure", completed: false, current: 150, target: 1000, unit: "€",
     checkpoints: [
       { value: 200, label: "200 €" },
       { value: 500, label: "500 €" },
@@ -42,38 +42,38 @@ const SEED_GOALS = [
   },
   {
     id: "g2", name: "Lire 12 livres", category: "Personnel",
-    type: "progress", completed: false, current: 3, target: 12, unit: "livres",
+    mode: "measure", completed: false, current: 3, target: 12, unit: "livres",
     checkpoints: [],
     deadline: null, note: null, year: 2026, period: "all", order: 1,
     completedAt: null, photo: null, createdAt: 2
   },
   {
     id: "g3", name: "Apprendre les bases d'une nouvelle langue", category: "Personnel",
-    type: "binary", completed: false, current: null, target: null, unit: "", checkpoints: [],
+    mode: "complete", completed: false, current: 0, target: 0, unit: "", checkpoints: [], steps: [],
     deadline: "2026-12-31", note: null, year: 2026, period: "all", order: 2,
     completedAt: null, photo: null, createdAt: 3
   },
   {
     id: "g4", name: "Trouver un nouveau job", category: "Travail",
-    type: "binary", completed: false, current: null, target: null, unit: "", checkpoints: [],
+    mode: "complete", completed: false, current: 0, target: 0, unit: "", checkpoints: [], steps: [],
     deadline: "2026-10-31", note: null, year: 2026, period: "all", order: 3,
     completedAt: null, photo: null, createdAt: 4
   },
   {
     id: "g5", name: "Partir en voyage", category: "Voyage",
-    type: "binary", completed: false, current: null, target: null, unit: "", checkpoints: [],
+    mode: "complete", completed: false, current: 0, target: 0, unit: "", checkpoints: [], steps: [],
     deadline: null, note: "Destination à définir", year: 2026, period: "all", order: 4,
     completedAt: null, photo: null, createdAt: 5
   },
   {
     id: "g6", name: "Courir 5 km sans s'arrêter", category: "Sport",
-    type: "binary", completed: false, current: null, target: null, unit: "", checkpoints: [],
+    mode: "complete", completed: false, current: 0, target: 0, unit: "", checkpoints: [], steps: [],
     deadline: null, note: null, year: 2026, period: "all", order: 5,
     completedAt: null, photo: null, createdAt: 6
   },
   {
     id: "g7", name: "S'acheter quelque chose qui me fait plaisir", category: "Achats",
-    type: "binary", completed: false, current: null, target: null, unit: "", checkpoints: [],
+    mode: "complete", completed: false, current: 0, target: 0, unit: "", checkpoints: [], steps: [],
     deadline: null, note: null, year: 2026, period: "all", order: 6,
     completedAt: null, photo: null, createdAt: 7
   }
@@ -87,8 +87,9 @@ let activePeriod = "all";      // all | Q1 | Q2 | Q3 | Q4
 let activeCategory = "all";
 let sortMode = "custom";       // custom | alpha | progress | category | deadline
 let editingId = null;
-let currentType = "binary";
+let currentMode = "complete";
 let formCheckpoints = [];
+let formSteps = [];
 
 /* ---------- Persistence & migration ---------- */
 function loadData(){
@@ -118,7 +119,7 @@ function saveData(){
 function buildFreshState(){
   return {
     version: DATA_VERSION,
-    goals: SEED_GOALS.map(g => ({ ...g, checkpoints: g.checkpoints.map(cp => ({ ...cp })) })),
+    goals: SEED_GOALS.map((g, index) => migrateGoal(g, index)),
     categories: [...DEFAULT_CATEGORIES],
     preferences: { theme: "system", lastYear: 2026, sortMode: "custom", firstName: "", iosPromptSeen: false }
   };
@@ -153,21 +154,33 @@ function migrateData(parsed){
     iosPromptSeen: !!(rawPreferences && rawPreferences.iosPromptSeen)
   };
 
+  localStorage.setItem("telos_schema_version", String(DATA_VERSION));
   return { version: DATA_VERSION, goals, categories, preferences };
 }
 
 function migrateGoal(g, index){
-  const type = g.type === "progress" ? "progress" : "binary";
+  const mode = g.mode || (g.type === "progress" ? "measure" : "complete");
+  const checkpoints = Array.isArray(g.checkpoints) ? g.checkpoints.map(cp =>
+    typeof cp === "object"
+      ? { value: Number(cp.value) || 0, label: cp.label || String(cp.value || 0) }
+      : { value: Number(cp) || 0, label: String(cp) }
+  ) : defaultCheckpointsFor(g);
   return {
     id: g.id || uid(),
     name: g.name || "Sans nom",
     category: g.category || "Personnel",
-    type,
+    mode: ["complete", "measure", "steps"].includes(mode) ? mode : "complete",
     completed: !!g.completed,
-    current: type === "progress" ? (typeof g.current === "number" ? g.current : 0) : null,
-    target: type === "progress" ? (typeof g.target === "number" ? g.target : 0) : null,
+    current: typeof g.current === "number" ? g.current : 0,
+    target: typeof g.target === "number" ? g.target : 0,
     unit: g.unit || "",
-    checkpoints: Array.isArray(g.checkpoints) ? g.checkpoints : defaultCheckpointsFor(g),
+    checkpoints,
+    steps: Array.isArray(g.steps) ? g.steps.map((step, stepIndex) => ({
+      id: step.id || `step-${stepIndex}-${Date.now()}`,
+      title: step.title || step.name || "",
+      deadline: step.deadline || null,
+      completed: !!step.completed
+    })) : [],
     deadline: g.deadline || null,
     note: g.note || null,
     year: typeof g.year === "number" ? g.year : 2026,
@@ -197,15 +210,25 @@ function uid(){
   return "g" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 function isDone(g){
-  if(g.type === "binary") return g.completed;
-  return g.target > 0 && g.current >= g.target;
+  return !!g.completed;
 }
-function progressPercent(g){
-  if(g.type !== "progress" || !g.target || g.target <= 0) return 0;
-  return Math.min(100, Math.round((g.current / g.target) * 100));
+function getGoalProgress(g){
+  if(g.mode === "measure"){
+    if(!g.target || g.target <= 0) return g.completed ? 100 : 0;
+    return Math.max(0, Math.min(100, Math.round((g.current / g.target) * 100)));
+  }
+  if(g.mode === "steps" || (g.mode === "complete" && g.steps.length > 0)){
+    if(g.steps.length === 0) return g.completed ? 100 : 0;
+    return Math.round((g.steps.filter(step => step.completed).length / g.steps.length) * 100);
+  }
+  return g.completed ? 100 : 0;
+}
+function calculateGlobalProgress(displayedGoals){
+  if(!displayedGoals || displayedGoals.length === 0) return 0;
+  return Math.round(displayedGoals.reduce((sum, goal) => sum + getGoalProgress(goal), 0) / displayedGoals.length);
 }
 function sortableProgress(g){
-  return g.type === "progress" ? progressPercent(g) : (g.completed ? 100 : 0);
+  return getGoalProgress(g);
 }
 function formatDate(iso){
   if(!iso) return null;
@@ -382,7 +405,7 @@ function renderSummary(){
   const total = scoped.length;
   const done = scoped.filter(isDone).length;
   const ongoing = total - done;
-  const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+  const pct = calculateGlobalProgress(scoped);
 
   document.getElementById("statTotal").textContent = total;
   document.getElementById("statDone").textContent = done;
@@ -458,7 +481,7 @@ function renderCard(g){
     body.appendChild(note);
   }
 
-  if(g.type === "progress"){
+  if(g.mode === "measure"){
     const wrap = document.createElement("div");
     wrap.className = "progress-wrap";
     const values = document.createElement("div");
@@ -467,7 +490,7 @@ function renderCard(g){
     left.textContent = `${formatValue(g.current)} / ${formatValue(g.target)} ${g.unit || ""}`.trim();
     values.appendChild(left);
     if(g.checkpoints && g.checkpoints.length){
-      const reached = g.checkpoints.filter(cp => g.current >= cp.value).length;
+      const reached = g.checkpoints.filter(cp => g.current >= Number(cp.value)).length;
       const cpSpan = document.createElement("span");
       cpSpan.className = "checkpoint-count";
       cpSpan.textContent = `${reached} / ${g.checkpoints.length} étapes`;
@@ -477,10 +500,38 @@ function renderCard(g){
     track.className = "progress-track";
     const fill = document.createElement("div");
     fill.className = "progress-fill";
-    fill.style.width = progressPercent(g) + "%";
+    fill.style.width = getGoalProgress(g) + "%";
     track.appendChild(fill);
     wrap.appendChild(values);
     wrap.appendChild(track);
+    body.appendChild(wrap);
+  }else if(g.mode === "steps" || (g.mode === "complete" && g.steps.length > 0)){
+    const wrap = document.createElement("div");
+    wrap.className = "steps-summary";
+    const values = document.createElement("div");
+    values.className = "progress-values";
+    values.textContent = `${g.steps.filter(step => step.completed).length} / ${g.steps.length} étapes · ${getGoalProgress(g)} %`;
+    const track = document.createElement("div");
+    track.className = "progress-track";
+    const fill = document.createElement("div");
+    fill.className = "progress-fill";
+    fill.style.width = getGoalProgress(g) + "%";
+    track.appendChild(fill);
+    wrap.appendChild(values);
+    wrap.appendChild(track);
+    g.steps.forEach((step, index) => {
+      const stepButton = document.createElement("button");
+      stepButton.type = "button";
+      stepButton.className = "step-toggle" + (step.completed ? " completed" : "");
+      stepButton.textContent = `${step.completed ? "✓" : "○"} ${step.title || `Étape ${index + 1}`}`;
+      stepButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        step.completed = !step.completed;
+        saveData();
+        renderAll();
+      });
+      wrap.appendChild(stepButton);
+    });
     body.appendChild(wrap);
   }
 
@@ -506,12 +557,12 @@ function attachDrag(card){
   function cancelPress(){ clearTimeout(longPressTimer); }
 
   function onDown(e){
-    if(e.target.closest(".check")) return;
+    if(e.target.closest("button, input, .checkbox")) return;
     startX = e.clientX; startY = e.clientY;
     pointerId = e.pointerId;
     longPressTimer = setTimeout(() => {
       dragging = true;
-      card.classList.add("dragging");
+      card.classList.add("dragging-active");
       card.style.touchAction = "none";
       try{ card.setPointerCapture(pointerId); }catch(err){}
       if(navigator.vibrate) navigator.vibrate(10);
@@ -560,7 +611,7 @@ function attachDrag(card){
     cancelPress();
     if(!dragging){ return; }
     dragging = false;
-    card.classList.remove("dragging");
+    card.classList.remove("dragging-active");
     card.style.transform = "";
     card.style.touchAction = "";
     try{ card.releasePointerCapture(pointerId); }catch(err){}
@@ -585,19 +636,8 @@ function attachDrag(card){
 function toggleComplete(id){
   const g = state.goals.find(x => x.id === id);
   if(!g) return;
-  if(g.type === "binary"){
-    g.completed = !g.completed;
-    g.completedAt = g.completed ? Date.now() : null;
-  }else{
-    if(isDone(g)){
-      g.current = g._prevCurrent ?? Math.max(0, g.target - 1);
-      g.completedAt = null;
-    }else{
-      g._prevCurrent = g.current;
-      g.current = g.target;
-      g.completedAt = Date.now();
-    }
-  }
+  g.completed = !g.completed;
+  g.completedAt = g.completed ? Date.now() : null;
   saveData();
   renderAll();
 }
@@ -615,15 +655,18 @@ const formSheet = document.getElementById("formSheet");
 const goalForm = document.getElementById("goalForm");
 const fName = document.getElementById("fName");
 const fCategory = document.getElementById("fCategory");
-const fType = document.getElementById("fType");
 const fCurrent = document.getElementById("fCurrent");
 const fTarget = document.getElementById("fTarget");
-const fUnit = document.getElementById("fUnit");
+const goalMode = document.getElementById("goal-mode");
+const goalUnit = document.getElementById("goal-unit");
+const goalUnitCustom = document.getElementById("goal-unit-custom");
+const measureFields = document.getElementById("measure-fields");
+const stepsFields = document.getElementById("steps-fields");
+const stepsList = document.getElementById("steps-list");
 const fYear = document.getElementById("fYear");
 const fPeriod = document.getElementById("fPeriod");
 const fDeadline = document.getElementById("fDeadline");
 const fNote = document.getElementById("fNote");
-const progressFields = document.getElementById("progressFields");
 const formDelete = document.getElementById("formDelete");
 const formTitle = document.getElementById("formTitle");
 
@@ -637,16 +680,62 @@ function populateCategorySelect(){
   });
 }
 
-function setType(type){
-  currentType = type;
-  fType.querySelectorAll(".segment").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.type === type);
+function setMode(mode){
+  currentMode = mode;
+  goalMode.value = mode;
+  document.querySelectorAll(".mode-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.mode === mode);
   });
-  progressFields.hidden = type !== "progress";
+  measureFields.hidden = mode !== "measure";
+  stepsFields.hidden = mode === "measure";
 }
 
-fType.querySelectorAll(".segment").forEach(btn => {
-  btn.addEventListener("click", () => setType(btn.dataset.type));
+document.querySelectorAll(".mode-btn").forEach(btn => {
+  btn.addEventListener("click", () => setMode(btn.dataset.mode));
+});
+
+document.querySelectorAll("#unit-chips .chip").forEach(chip => {
+  chip.addEventListener("click", () => {
+    const unit = chip.dataset.unit;
+    document.querySelectorAll("#unit-chips .chip").forEach(item => item.classList.toggle("active", item === chip));
+    goalUnit.value = unit === "custom" ? goalUnitCustom.value.trim() : unit;
+    goalUnitCustom.hidden = unit !== "custom";
+    if(unit === "custom") goalUnitCustom.focus();
+  });
+});
+goalUnitCustom.addEventListener("input", () => {
+  if(goalMode.value === "measure") goalUnit.value = goalUnitCustom.value.trim();
+});
+
+function renderStepsEditor(){
+  stepsList.innerHTML = "";
+  formSteps.forEach((step, index) => {
+    const row = document.createElement("div");
+    row.className = "step-item-editor";
+    const title = document.createElement("input");
+    title.type = "text";
+    title.placeholder = "Titre de l'étape";
+    title.value = step.title || "";
+    title.addEventListener("input", () => { formSteps[index].title = title.value; });
+    const deadline = document.createElement("input");
+    deadline.type = "date";
+    deadline.value = step.deadline || "";
+    deadline.addEventListener("input", () => { formSteps[index].deadline = deadline.value || null; });
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "checkpoint-remove";
+    remove.textContent = "×";
+    remove.setAttribute("aria-label", "Supprimer l'étape");
+    remove.addEventListener("click", () => { formSteps.splice(index, 1); renderStepsEditor(); setMode(currentMode); });
+    row.append(title, deadline, remove);
+    stepsList.appendChild(row);
+  });
+}
+
+document.getElementById("btn-add-step").addEventListener("click", () => {
+  formSteps.push({ id: uid(), title: "", deadline: null, completed: false });
+  renderStepsEditor();
+  setMode(currentMode);
 });
 
 function renderCheckpointsEditor(){
@@ -710,25 +799,32 @@ function openForm(id){
     formDelete.hidden = false;
     fName.value = g.name;
     fCategory.value = g.category;
-    setType(g.type);
+    formSteps = (g.steps || []).map(step => ({ ...step }));
+    setMode(g.mode || "complete");
     fCurrent.value = g.current ?? "";
     fTarget.value = g.target ?? "";
-    fUnit.value = g.unit || "";
+    goalUnit.value = g.unit || "";
+    const unitChip = document.querySelector(`#unit-chips .chip[data-unit="${CSS.escape(g.unit || "")}"]`);
+    document.querySelectorAll("#unit-chips .chip").forEach(chip => chip.classList.toggle("active", chip === unitChip));
+    goalUnitCustom.value = unitChip ? "" : g.unit || "";
+    goalUnitCustom.hidden = !!unitChip;
     fYear.value = g.year;
     fPeriod.value = g.period || "all";
     fDeadline.value = g.deadline || "";
     fNote.value = g.note || "";
-    formCheckpoints = (g.checkpoints || []).map(cp => ({ ...cp }));
+    formCheckpoints = (g.checkpoints || []).map(cp => typeof cp === "object" ? ({ ...cp }) : ({ value: cp, label: String(cp) }));
   }else{
     formTitle.textContent = "Nouvel objectif";
     formDelete.hidden = true;
-    setType("binary");
+    formSteps = [];
+    setMode("complete");
     if(fCategory.options.length) fCategory.value = fCategory.options[0].value;
     fYear.value = selectedYear;
     fPeriod.value = activePeriod === "all" ? "all" : activePeriod;
     formCheckpoints = [];
   }
   renderCheckpointsEditor();
+  renderStepsEditor();
 
   formOverlay.hidden = false;
   lockBodyScroll();
@@ -759,30 +855,32 @@ function saveForm(){
     const g = state.goals.find(x => x.id === editingId);
     g.name = name;
     g.category = category;
-    g.type = currentType;
+    g.mode = currentMode;
     g.year = year;
     g.period = period;
     g.deadline = deadline;
     g.note = note;
-    if(currentType === "progress"){
+    if(currentMode === "measure"){
       g.current = fCurrent.value === "" ? 0 : Number(fCurrent.value);
       g.target = fTarget.value === "" ? 0 : Number(fTarget.value);
-      g.unit = fUnit.value.trim();
+      g.unit = goalUnit.value.trim();
       g.checkpoints = cleanedCheckpoints;
     }else{
-      g.current = null; g.target = null; g.unit = ""; g.checkpoints = [];
+      g.current = 0; g.target = 0; g.unit = ""; g.checkpoints = [];
     }
+    g.steps = formSteps.filter(step => step.title.trim()).map(step => ({ ...step, title: step.title.trim() }));
   }else{
     const maxOrder = state.goals.reduce((m, g) => Math.max(m, g.order ?? 0), -1);
     const newGoal = {
       id: uid(),
       name, category,
-      type: currentType,
+      mode: currentMode,
       completed: false,
-      current: currentType === "progress" ? (fCurrent.value === "" ? 0 : Number(fCurrent.value)) : null,
-      target: currentType === "progress" ? (fTarget.value === "" ? 0 : Number(fTarget.value)) : null,
-      unit: currentType === "progress" ? fUnit.value.trim() : "",
-      checkpoints: currentType === "progress" ? cleanedCheckpoints : [],
+      current: currentMode === "measure" ? (fCurrent.value === "" ? 0 : Number(fCurrent.value)) : 0,
+      target: currentMode === "measure" ? (fTarget.value === "" ? 0 : Number(fTarget.value)) : 0,
+      unit: currentMode === "measure" ? goalUnit.value.trim() : "",
+      checkpoints: currentMode === "measure" ? cleanedCheckpoints : [],
+      steps: formSteps.filter(step => step.title.trim()).map(step => ({ ...step, title: step.title.trim() })),
       deadline, note, year, period,
       order: maxOrder + 1,
       completedAt: null,

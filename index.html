@@ -184,32 +184,64 @@
         </label>
 
         <div class="field">
-          <span>Type</span>
-          <div class="segmented" id="fType">
-            <button type="button" class="segment active" data-type="binary">Binaire</button>
-            <button type="button" class="segment" data-type="progress">Progression</button>
+          <span>Comment veux-tu suivre cet objectif ?</span>
+          <div class="mode-selector-grid">
+            <button type="button" class="mode-btn active" data-mode="complete">
+              <span class="mode-title">À accomplir</span>
+              <span class="mode-desc">Terminé ou non, avec étapes optionnelles.</span>
+            </button>
+            <button type="button" class="mode-btn" data-mode="measure">
+              <span class="mode-title">À mesurer</span>
+              <span class="mode-desc">Suivre une valeur numérique jusqu’à une cible.</span>
+            </button>
+            <button type="button" class="mode-btn" data-mode="steps">
+              <span class="mode-title">Par étapes</span>
+              <span class="mode-desc">Avancer à travers plusieurs jalons clés.</span>
+            </button>
+          </div>
+          <input type="hidden" id="goal-mode" value="complete">
+        </div>
+
+        <div id="measure-fields" class="mode-fields" hidden>
+          <div class="progress-fields-row">
+            <label class="field field-half">
+              <span>Actuel</span>
+              <input type="number" id="fCurrent" min="0" step="any" value="0">
+            </label>
+            <label class="field field-half">
+              <span>Cible</span>
+              <input type="number" id="fTarget" min="0" step="any" placeholder="1000">
+            </label>
+          </div>
+          <div class="field">
+            <span>Unité</span>
+            <div class="unit-chips" id="unit-chips">
+              <button type="button" class="chip" data-unit="€">€</button>
+              <button type="button" class="chip" data-unit="$">$</button>
+              <button type="button" class="chip" data-unit="kg">kg</button>
+              <button type="button" class="chip" data-unit="km">km</button>
+              <button type="button" class="chip" data-unit="livres">livres</button>
+              <button type="button" class="chip" data-unit="pages">pages</button>
+              <button type="button" class="chip" data-unit="heures">heures</button>
+              <button type="button" class="chip" data-unit="%">%</button>
+              <button type="button" class="chip" data-unit="custom">Autre</button>
+            </div>
+            <input type="text" id="goal-unit-custom" class="hidden mt-2" maxlength="20" placeholder="Ex : sessions, chapitres...">
+            <input type="hidden" id="goal-unit" value="€">
+          </div>
+          <div class="field">
+            <span>Checkpoints (optionnel)</span>
+            <div id="checkpointsEditor" class="checkpoints-editor"></div>
+            <button type="button" id="addCheckpointBtn" class="add-checkpoint-btn">+ Ajouter un checkpoint</button>
           </div>
         </div>
 
-        <div id="progressFields" class="progress-fields" hidden>
-          <label class="field field-half">
-            <span>Valeur actuelle</span>
-            <input type="number" id="fCurrent" min="0" step="any" placeholder="0">
-          </label>
-          <label class="field field-half">
-            <span>Valeur cible</span>
-            <input type="number" id="fTarget" min="0" step="any" placeholder="1000">
-          </label>
-          <label class="field">
-            <span>Unité (optionnel)</span>
-            <input type="text" id="fUnit" maxlength="10" placeholder="€">
-          </label>
-
-          <div class="field">
-            <span>Étapes (optionnel)</span>
-            <div id="checkpointsEditor" class="checkpoints-editor"></div>
-            <button type="button" id="addCheckpointBtn" class="add-checkpoint-btn">+ Ajouter une étape</button>
+        <div id="steps-fields" class="mode-fields" hidden>
+          <div class="section-header-flex">
+            <span>Étapes</span>
+            <button type="button" id="btn-add-step" class="btn-text-action">+ Ajouter une étape</button>
           </div>
+          <div id="steps-list" class="steps-editor-list"></div>
         </div>
 
         <div class="progress-fields-row">
